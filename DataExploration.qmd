@@ -1,0 +1,35 @@
+---
+title: "ExploratoryAnalysis"
+format: pdf
+editor: visual
+---
+
+## Q1: What does the data contain?
+
+```{r}
+library(ggplot2)
+data <- read.csv("large_dataset.csv")
+data
+```
+
+*summarize data*
+
+## Q2: What is the data variability like?
+
+```{r}
+
+ggplot(data = data, mapping = aes(x=method)) + geom_bar()
+
+#difference in significant strikes between fighters by gender
+ggplot(data = data, mapping = aes(x=sig_str_acc_diff, colour = gender)) + geom_freqpoly()
+
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
