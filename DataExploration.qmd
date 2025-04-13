@@ -9,10 +9,14 @@ editor: visual
 ```{r}
 library(ggplot2)
 data <- read.csv("large_dataset.csv")
-data
+head(data)
+sdata <- data[-c(1, 5, 8:25, 41:53)]
+head(sdata)
 ```
 
-*summarize data*
+The data is from a kaggle dataset linked here. It has all UFC fights from 1996-2024, and contains all individual fighter statistics as well as the in fight statistics. For the purposes of this project, we will be primarily focusing on the fighter statistics as predictor variables.
+
+<https://www.kaggle.com/datasets/maksbasher/ufc-complete-dataset-all-events-1996-2024>
 
 ## Q2: What is the data variability like?
 
@@ -20,16 +24,48 @@ data
 
 ggplot(data = data, mapping = aes(x=method)) + geom_bar()
 
+ggplot(data = data, mapping = aes(x=r_stance)) + geom_bar()
+
+
 #difference in significant strikes between fighters by gender
 ggplot(data = data, mapping = aes(x=sig_str_acc_diff, colour = gender)) + geom_freqpoly()
+#key to seeing that the red/blue player won't influence results 
+
+# red total average striking 
+ggplot(data = data, mapping = aes(x=r_sig_str_acc_total, colour = gender)) + geom_freqpoly()
+
+#red submission average
+ggplot(data = data, mapping = aes(x=r_sub_avg, colour = gender)) + geom_freqpoly()
+
+#red takedown average
+ggplot(data = data, mapping = aes(x=r_td_avg, colour = gender)) + geom_freqpoly()
+
 
 ```
 
-You can add options to executable code like this
+## Q3: am I missing any data?
 
 ```{r}
-#| echo: false
-2 * 2
+summary(sdata)
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+Most of the missing values appear in the difference columns, which we don't really have to use anyways.
+
+## Q4: what type of covariation occurs within my variables?
+
+```{r}
+ggplot(data = data, mapping = aes(x=r_td_avg, y = r_sub_avg)) +geom_point()
+
+ggplot(data = data, mapping = aes(x=r_sig_str_acc_total, y = r_sub_avg, colour = gender)) +geom_point()
+
+ggplot(data = data, mapping = aes(x=r_sig_str_acc_total, y = r_losses_total, colour = gender)) +geom_point()
+
+ggplot(data = data, mapping = aes(x=r_sig_str_acc_total, y = r_losses_total, colour = winner)) +geom_point()
+
+ggplot(data = data, mapping = aes(x=r_sig_str_acc_total, y = winner)) + geom_boxplot()
+
+ggplot(data = data, mapping = aes(x=r_sub_avg, y = winner)) + geom_boxplot()
+
+ggplot(data = data, mapping = aes(x=r_sub_avg, y = r_stance)) + geom_boxplot()
+
+```
