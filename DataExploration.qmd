@@ -12,11 +12,10 @@ data <- read.csv("large_dataset.csv")
 head(data)
 sdata <- data[-c(1, 5, 8:25, 41:53)]
 head(sdata)
+str(data)
 ```
 
-The data is from a kaggle dataset linked here. It has all UFC fights from 1996-2024, and contains all individual fighter statistics as well as the in fight statistics. For the purposes of this project, we will be primarily focusing on the fighter statistics as predictor variables.
-
-<https://www.kaggle.com/datasets/maksbasher/ufc-complete-dataset-all-events-1996-2024>
+The data is from the (UFC Complete Dataset on Kaggle)\[<https://www.kaggle.com/datasets/maksbasher/ufc-complete-dataset-all-events-1996-2024>\] that is parsed from the (UFCStats website)\[<http://www.ufcstats.com/statistics/events/completed>\]. It has detailed information on all UFC fights from 1996-2024, and contains all individual fighter statistics as well as the in fight statistics. The dataset contains 95 variables. For the purposes of this project, we will be primarily focusing on the fighter statistics as predictor variables for fight outcomes. Fighter statistics include physical statistics such as height, weight, and stance, and career statistics such as strikes accuracy and takedown accuracy.
 
 ## Q2: What is the data variability like?
 
