@@ -4,7 +4,7 @@ format: pdf
 editor: visual
 ---
 
-## Q1: What does the data contain?
+## Data Overview
 
 ```{r}
 library(tidyverse)
@@ -17,7 +17,7 @@ str(data)
 
 The data is from the (UFC Complete Dataset on Kaggle)\[<https://www.kaggle.com/datasets/maksbasher/ufc-complete-dataset-all-events-1996-2024>\] that is parsed from the (UFCStats website)\[<http://www.ufcstats.com/statistics/events/completed>\]. It has detailed information on all UFC fights from 1996-2024, and contains all individual fighter statistics as well as the in fight statistics. The dataset contains 95 variables. For the purposes of this project, we will be primarily focusing on the fighter statistics as predictor variables for fight outcomes. Fighter statistics include physical statistics such as height, weight, and stance, and career statistics such as strikes accuracy and takedown accuracy. This dataset also includes many differences in fighter statistics between the Red and Blue fighters, all of which are calculated as Red minus Blue.
 
-## Q2: What is the data variability like?
+## Data Variability
 
 ```{r}
 # histogram for method in which the fight ended
@@ -27,7 +27,7 @@ ggplot(data = data, mapping = aes(x=fct_infreq(method))) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # histogram for red stance
-ggplot(data = data, mapping = aes(x=r_stance)) + 
+ggplot(data = data, mapping = aes(x=fct_infreq(r_stance))) + 
   geom_bar() +
   labs(title = "Distribution of Stance of Red Fighter Across Fights", x = "Stance", y = "Number of Fights")
 
@@ -53,27 +53,27 @@ ggplot(data = data, mapping = aes(x=r_sig_str_acc_total, color = gender)) +
 # red submission average
 ggplot(data = data, mapping = aes(x=r_sub_avg, color = gender)) + 
   geom_freqpoly() +
-  labs(title = "Distribution of Career Average Submissions Attempted per 15 minutes by Red Fighter Across Fights", y = "Average Number of Attempted Submissions", y = "Number of Fights")
+  labs(title = "Distribution of Career Average Submissions Attempted per 15 minutes by\nRed Fighter Across Fights", y = "Average Number of Attempted Submissions", y = "Number of Fights")
 
 # red takedown average
 ggplot(data = data, mapping = aes(x=r_td_avg, color = gender)) + 
   geom_freqpoly() +
-  labs(title = "Distribution of Career Average Takedowns Landed per 15 minutes by Red Fighter Across Fights", x = "Average Number of Landed Takedowns", y = "Number of Fights")
+  labs(title = "Distribution of Career Average Takedowns Landed per 15 minutes by\nRed Fighter Across Fights", x = "Average Number of Landed Takedowns", y = "Number of Fights")
 
 ```
 
-In the histogram of the differences in significant strikes accuracy between fighters we can see that the differences follow an approximately normal distribution centered around 0.045, meaning that the red fighter has only a very slightly higher significant strike accuracy rate compared to the blue fighter; the accuracy rates do not appear to be significantly affected by whether the fighter is the red or blue fighter.
+In the histogram of the differences in significant strikes accuracy between fighters, we can see that the differences follow an approximately normal distribution centered around 0.045, meaning that the red fighter has only a very slightly higher significant strike accuracy rate compared to the blue fighter; the accuracy rates do not appear to be significantly affected by whether the fighter is the red or blue fighter.
 
-## Q3: am I missing any data?
+## Missing Data
 
 ```{r}
 summary(sdata)
 names(which(colSums(is.na(data)) > 0))
 ```
 
-There is missing data for total rounds in a fight, ages of Red and Blue fighters and differences in age, and reaches of Red and Blue fighters and differences in reaches.
+There is missing data for total rounds in a fight, ages of Red and Blue fighters and differences in age, and reaches of Red and Blue fighters and differences in reaches. We will focus on using other fighter and fight attributes in our model.
 
-## Q4: what type of covariation occurs within my variables?
+## Covariance
 
 ```{r}
 ggplot(data = data, mapping = aes(x=r_td_avg, y = r_sub_avg)) +geom_point()
@@ -91,3 +91,5 @@ ggplot(data = data, mapping = aes(x=r_sub_avg, y = winner)) + geom_boxplot()
 ggplot(data = data, mapping = aes(x=r_sub_avg, y = r_stance)) + geom_boxplot()
 
 ```
+
+We do not see significant covariance present in important variables in our model.
