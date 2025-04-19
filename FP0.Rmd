@@ -1,0 +1,92 @@
+---
+title: "FP0"
+author: "Sophia Manodori and Greta Anesko"
+date: "2025-04-15"
+output: pdf_document
+---
+
+# Data Overview
+
+```{r}
+library(tidyverse)
+data <- read.csv("large_dataset.csv")
+head(data)
+sdata <- data[-c(1, 5, 8:25, 41:53)]
+head(sdata)
+str(data)
+```
+
+The data is from the (UFC Complete Dataset on Kaggle)[https://www.kaggle.com/datasets/maksbasher/ufc-complete-dataset-all-events-1996-2024] that is parsed from the (UFCStats website)[http://www.ufcstats.com/statistics/events/completed]. It has detailed information on all UFC fights from 1996-2024, and contains all individual fighter statistics as well as the in fight statistics. The dataset contains 95 variables. For the purposes of this project, we will be primarily focusing on the fighter statistics as predictor variables for fight outcomes. Fighter statistics include physical statistics such as height, weight, and stance, and career statistics such as strikes accuracy and takedown accuracy. This dataset also includes many differences in fighter statistics between the Red and Blue fighters, all of which are calculated as Red minus Blue. 
+
+# Data Variability
+
+```{r}
+# histogram for method in which the fight ended
+ggplot(data = data, mapping = aes(x=fct_infreq(method))) + 
+  geom_bar() +
+  labs(title = "Distribution of Method In Which The Fight Ended Across Fights", x = "Method", y = "Number of Fights") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# histogram for red stance
+ggplot(data = data, mapping = aes(x=fct_infreq(r_stance))) + 
+  geom_bar() +
+  labs(title = "Distribution of Stance of Red Fighter Across Fights", x = "Stance", y = "Number of Fights")
+
+# lineplot of difference in significant strikes accuracy between fighters by gender
+ggplot(data = data, mapping = aes(x=sig_str_acc_diff, color = gender)) + 
+  geom_freqpoly() +
+  labs(title = "Difference in Significant Strikes Accuracy Between Fighters By Gender", x = "Difference (Red - Blue)", y = "Number of Fights")
+
+# histogram of difference in significant strikes accuracy between fighters
+ggplot(data = data) +
+  geom_histogram(mapping = aes(x = sig_str_acc_diff)) +
+  geom_vline(aes(xintercept = mean(sig_str_acc_diff)), 
+             color = "red", linetype="dashed") +
+  geom_text(aes(x = mean(sig_str_acc_diff) + 0.17, y = 1050, label = paste("Mean: ", as.character(round(mean(sig_str_acc_diff), 3))), color="red")) + 
+  theme(legend.position = "none") +
+  labs(title = "Difference in Significant Strikes Accuracy Between Fighters", x = "Difference (Red - Blue)", y = "Number of Fights")
+
+# red total average striking 
+ggplot(data = data, mapping = aes(x=r_sig_str_acc_total, color = gender)) + 
+  geom_freqpoly() +
+  labs(title = "Distribution of Career Significant Striking Accuracy of Red Fighter Across Fights", x = "Accuracy", y = "Number of Fights")
+
+# red submission average
+ggplot(data = data, mapping = aes(x=r_sub_avg, color = gender)) + 
+  geom_freqpoly() +
+  labs(title = "Distribution of Career Average Submissions Attempted per 15 minutes by\nRed Fighter Across Fights", y = "Average Number of Attempted Submissions", y = "Number of Fights")
+
+# red takedown average
+ggplot(data = data, mapping = aes(x=r_td_avg, color = gender)) + 
+  geom_freqpoly() +
+  labs(title = "Distribution of Career Average Takedowns Landed per 15 minutes by\nRed Fighter Across Fights", x = "Average Number of Landed Takedowns", y = "Number of Fights")
+```
+
+In the histogram of the differences in significant strikes accuracy between fighters, we can see that the differences follow an approximately normal distribution centered around 0.045, meaning that the red fighter has only a very slightly higher significant strike accuracy rate compared to the blue fighter; the accuracy rates do not appear to be significantly affected by whether the fighter is the red or blue fighter.
+
+# Missing Data
+
+```{r}
+summary(sdata)
+names(which(colSums(is.na(data)) > 0))
+```
+
+There is missing data for total rounds in a fight, ages of Red and Blue fighters and differences in age, and reaches of Red and Blue fighters and differences in reaches. We will focus on using other fighter and fight attributes in our model.
+
+```{r}
+ggplot(data = data, mapping = aes(x=r_td_avg, y = r_sub_avg)) +geom_point()
+
+ggplot(data = data, mapping = aes(x=r_sig_str_acc_total, y = r_sub_avg, colour = gender)) +geom_point()
+
+ggplot(data = data, mapping = aes(x=r_sig_str_acc_total, y = r_losses_total, colour = gender)) +geom_point()
+
+ggplot(data = data, mapping = aes(x=r_sig_str_acc_total, y = r_losses_total, colour = winner)) +geom_point()
+
+ggplot(data = data, mapping = aes(x=r_sig_str_acc_total, y = winner)) + geom_boxplot()
+
+ggplot(data = data, mapping = aes(x=r_sub_avg, y = winner)) + geom_boxplot()
+
+ggplot(data = data, mapping = aes(x=r_sub_avg, y = r_stance)) + geom_boxplot()
+```
+
+We do not see significant covariance present in important variables in our model.
