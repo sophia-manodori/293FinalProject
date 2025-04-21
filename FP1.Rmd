@@ -91,5 +91,5 @@ table(nb.class, winner.test1)
 41/(51+41) # Blue error rate
 302/(302+1094) # Red error rate
 ```
-The overall error rate is 23%. The error rate for the Blue class is 44% and the error rate for the Red class is 22%. Although the overall error rate is the same as for the LDA model, the error rate for the Blue class is 6 percentage points better in the LDA model, meaning the LDA model performs the best with this dataset. All models do substantially better at predicting the Red winner than at predicting the Blue winner.
+The overall error rate is 23%. The error rate for the Blue class is 44% and the error rate for the Red class is 22%. Although the overall error rate is the same as for the LDA model, the error rate for the Blue class is 6 percentage points better in the LDA model, meaning the LDA model performs the best with this dataset. All models do substantially better at predicting the Red winner than at predicting the Blue winner. This is likely due to the majority of the wins being Red winners, as the Red side is usually the champion's side, so the greater number of Red wins allows the model to understand and predict Red wins better.
 
