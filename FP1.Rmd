@@ -22,20 +22,45 @@ full_data$ID <- 1:nrow(full_data)
 # select for winner and for fighter statistics differences
 # differences: Red minus Blue
 log_data <- full_data %>%
-  dplyr::select(ID, winner, wins_total_diff, losses_total_diff, age_diff, height_diff, weight_diff, reach_diff, SLpM_total_diff, SApM_total_diff, sig_str_acc_total_diff, td_acc_total_diff, str_def_total_diff, td_def_total_diff, sub_avg_diff, td_avg_diff)
+  dplyr::select(ID, winner, wins_total_diff, losses_total_diff, age_diff, height_diff, weight_diff, reach_diff, SLpM_total_diff, SApM_total_diff, sig_str_acc_total_diff, td_acc_total_diff, str_def_total_diff, td_def_total_diff, sub_avg_diff, td_avg_diff) %>%
+  drop_na()
+
+log_data$winner = as.factor(log_data$winner)
+
+# select first 80% of the data to be the training set
+log_train1 <- (log_data$ID <= round(0.8*nrow(log_data), 0))
+log_test1 <- log_data[!log_train1, ]
+winner.log_test1 <- log_data$winner[!log_train1]
+nrow(log_test1)
 ```
 
 ```{r}
 # Logistic regression
-log_data$winner = as.factor(log_data$winner)
-glm.fit <- glm(winner ~ ., family = binomial, data = log_data)
+glm.fit <- glm(winner ~ ., family = binomial, data = log_data, subset = log_train1)
 summary(glm.fit)
 ```
-The logistic regression model shows that the significant predictors of who wins are: wins_total_diff, losses_total_diff, age_diff, weight_diff, SLpM_total_diff, SApM_total_diff, sig_str_acc_total_diff, td_def_total_diff, and td_avg_diff. All of those variables have a p value below 0.001. We will use these variables for LDA, QDA, and Naive Bayes models.
+The logistic regression model shows that the significant predictors of who wins are: wins_total_diff, losses_total_diff, age_diff, weight_diff, SLpM_total_diff, SApM_total_diff, sig_str_acc_total_diff, td_def_total_diff, and td_avg_diff. All of those variables have a p value below 0.001. We will test this logistic regression model as a classification variable and we will use these significant variables for LDA, QDA, and Naive Bayes classification models and compare all models between each other to see which performs best as a classification method.
 
 ```{r}
-data <- log_data %>%
-  dplyr::select(ID, winner, wins_total_diff, losses_total_diff, age_diff, weight_diff, SLpM_total_diff, SApM_total_diff, sig_str_acc_total_diff, td_def_total_diff, td_avg_diff)
+glm.probs <- predict(glm.fit, log_test1, type = "response")
+contrasts(log_data$winner) # Red = 1
+glm.pred <- rep("Blue", 1537)
+glm.pred[glm.probs > .5] = "Red"
+table(glm.pred, winner.log_test1)
+
+200+175+326+836 # number of observations in test set used for analysis
+1-mean(glm.pred == winner.log_test1) # overall error rate
+175/(200+175) # Blue class error rate
+326/(326+836)
+```
+The logistic model has an overall error rate of 33%. The error rate for the Blue class is 47%, while the error rate for the Red class is significantly lower, at 28%.
+
+```{r}
+data <- full_data %>%
+  dplyr::select(ID, winner, wins_total_diff, losses_total_diff, age_diff, weight_diff, SLpM_total_diff, SApM_total_diff, sig_str_acc_total_diff, td_def_total_diff, td_avg_diff) %>%
+  drop_na()
+
+data$winner = as.factor(data$winner)
 ```
 
 ```{r}
@@ -46,23 +71,20 @@ winner.test1 <- data$winner[!train1]
 nrow(test1)
 ```
 
-```{r, warning=FALSE}
+```{r}
 # LDA
 lda.fit <- lda(winner ~ ., data = data, subset = train1)
 lda.pred <- predict(lda.fit, test1)
 lda.class <- lda.pred$class
 table(lda.class, winner.test1)
 
-57+264+35+923 # number of observations in test set used for analysis
+89+66+288+1003 # number of observations in test set used for analysis
 
-(57+35)/(57+264+35+923) # true Blue proportion in test
-(264+923)/(57+264+35+923) # true Red proportion in test
-
-(264+35)/(57+264+35+923) # overall error rate
-35/(57+35) # Blue class error rate
-264/(264+923) # Red class error rate
+(66+288)/(89+66+288+1003) # overall error rate
+66/(89+66) # Blue class error rate
+288/(288+1003) # Red class error rate
 ```
-The overall test error rate is 23%. The Blue class has an error rate of 38% and the Red class has an error rate of 22%.
+The overall test error rate for the LDA model is 24%. The Blue class has an error rate of 43% and the Red class has an error rate of 22%. This model performed better on all levels than the logistic regression model.
 
 ```{r, warning=FALSE}
 # QDA 
@@ -71,13 +93,13 @@ qda.fit
 qda.class <- predict(qda.fit, test1)$class
 table(qda.class, winner.test1)
 
-52+40+307+880 # number of observations in test set used for analysis
+78+77+331+960 # number of observations in test set used for analysis
 
-(40+307)/(52+40+307+880) # overall error rate
-40/(52+40) # Blue error rate
-307/(307+880) # Red error rate
+(77+331)/(78+77+331+960) # overall error rate
+77/(77+78) # Blue error rate
+331/(331+960) # Red error rate
 ```
-42% of the probabilities are Blue, 58% of the probabilities are Red. The overall error rate is 27%. The error rate for the Blue class is 43% and the error rate for the Red class is 25%. Both error rates are worse than the LDA model.
+The overall error rate for the QDA model is is 28%. The error rate for the Blue class is 50% and the error rate for the Red class is 26%. Both error rates are worse than the LDA model, especially for the Blue class.
 
 ```{r}
 # Naive Bayes
@@ -85,11 +107,11 @@ nb.fit <- naiveBayes(winner ~ ., data = data, subset = train1)
 nb.class <- predict(nb.fit, test1)
 table(nb.class, winner.test1)
 
-51+41+302+1094 # number of observations in test set used for analysis
+85+70+309+982 # number of observations in test set used for analysis
 
-(41+302)/(51+41+302+1094) # overall error rate
-41/(51+41) # Blue error rate
-302/(302+1094) # Red error rate
+(70+309)/(85+70+309+982) # overall error rate
+70/(70+85) # Blue error rate
+309/(309+982) # Red error rate
 ```
-The overall error rate is 23%. The error rate for the Blue class is 44% and the error rate for the Red class is 22%. Although the overall error rate is the same as for the LDA model, the error rate for the Blue class is 6 percentage points better in the LDA model, meaning the LDA model performs the best with this dataset. All models do substantially better at predicting the Red winner than at predicting the Blue winner. This is likely due to the majority of the wins being Red winners, as the Red side is usually the champion's side, so the greater number of Red wins allows the model to understand and predict Red wins better.
+The overall error rate is 26%. The error rate for the Blue class is 45% and the error rate for the Red class is 24%. Both error rates are worse than the LDA model. All models do substantially better at predicting the Red winner than at predicting the Blue winner. This is likely due to the majority of the wins being Red winners, as the Red side is usually the champion's side, so the greater number of Red wins allows the model to understand and predict Red wins better. We will use the LDA model to predict the outcome for the upcoming fight this weekend Saturday April 26th. 
 
