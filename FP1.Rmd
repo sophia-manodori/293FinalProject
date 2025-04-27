@@ -61,19 +61,22 @@ data <- full_data %>%
   drop_na()
 
 data$winner = as.factor(data$winner)
+
 ```
 
 ```{r}
 # select first 80% of the data to be the training set
 train1 <- (data$ID <= round(0.8*nrow(data), 0))
 test1 <- data[!train1, ]
+write.csv(data[c(1,2,3),], "slay.csv", row.names = FALSE)
+
 winner.test1 <- data$winner[!train1]
 nrow(test1)
 ```
 
 ```{r}
 # LDA
-lda.fit <- lda(winner ~ ., data = data, subset = train1)
+lda.fit <- lda(winner ~ . - ID, data = data, subset = train1)
 lda.pred <- predict(lda.fit, test1)
 lda.class <- lda.pred$class
 table(lda.class, winner.test1)
