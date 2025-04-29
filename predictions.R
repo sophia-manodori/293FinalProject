@@ -1,6 +1,7 @@
 sub_data <- full_data %>%
   dplyr::select(ID, winner, method, gender, wins_total_diff, losses_total_diff, age_diff, height_diff, weight_diff, reach_diff, SLpM_total_diff, SApM_total_diff, sig_str_acc_total_diff, td_acc_total_diff, str_def_total_diff, td_def_total_diff, sub_avg_diff, td_avg_diff)
 
+sub_data$winner = as.factor(sub_data$winner)
 
 
 method.data <- filter(sub_data, method=="KO/TKO"| method=="Decision - Split" | method == "Decision - Unanimous" | method == "Decision - Majority" | method == "Submission")
@@ -13,28 +14,30 @@ gdata <- full_data %>%
 
 #women model
 women$ID <- 1:nrow(women)
-women <- dplyr::filter(gdata, gender == "Women")
+women <- dplyr::filter(sub_data, gender == "Women")
 women <- women  %>% dplyr::select(ID, winner, wins_total_diff, losses_total_diff, age_diff, weight_diff, SLpM_total_diff, SApM_total_diff, sig_str_acc_total_diff, td_def_total_diff, td_avg_diff)
 
 train1.wom <- (women$ID <= round(0.8*nrow(women), 0))
 test1.wom <- women[!train1.wom, ]
 winner.test1.wom <- women$winner[!train1.wom]
 
-lda.fit.women <- lda(winner ~ ., data = women , subset=train1.wom)
+lda.fit.women <- lda(winner ~ . -ID, data = women , subset=train1.wom)
 lda.pred.wom <- predict(lda.fit.women, test1.wom)
 lda.class <- lda.pred.wom$class
 method.test1 <- women$method[!train1.met]
 table(lda.class, winner.test1.wom)
 
-
+glm.fit <- glm(winner ~ . -gender -method, family = binomial, data = women)
 
 
 
 # LDA
-lda.fit.final <- lda(winner ~ ., data = data, subset = train1)
-lda.pred <- predict(lda.fit, test1)
-lda.class <- lda.pred$class
+lda.fit.final <- lda(winner ~ . -ID, data = data)
+lda.pred.final <- predict(lda.fit.final, test1)
+lda.class <- lda.pred.final$class
 table(lda.class, winner.test1)
+
+
 
 fightnight1.data <- data.frame(
   ID = 1, wins_total_diff = -6, losses_total_diff = -5, age_diff = -4, weight_diff = 0, SLpM_total_diff = 0.43, SApM_total_diff = -1.78, sig_str_acc_total_diff = -0.2, td_def_total_diff = -.17, td_avg_diff=0.3
@@ -76,23 +79,43 @@ fightnight10.data <- data.frame(
   ID = 10, wins_total_diff = -1, losses_total_diff = -2, age_diff = 1, weight_diff = 5, SLpM_total_diff = 1.29, SApM_total_diff = -0.47, sig_str_acc_total_diff = 0.14, td_def_total_diff = -0.05, td_avg_diff=-0.18
 )
 
-lda.pred.fightnight1 <- predict(lda.fit, fightnight1.data) #garry .63 red 
-lda.pred.fightnight2 <- predict(lda.fit, fightnight2.data) #mingyang .81 blue 
-lda.pred.fightnight3 <- predict(lda.fit, fightnight3.data) #Onama .56 blue 
-lda.pred.fightnight4 <- predict(lda.fit, fightnight4.data)
-lda.pred.fightnight5 <- predict(lda.fit, fightnight5.data) #brown .55 red 
-lda.pred.fightnight6 <- predict(lda.fit, fightnight6.data)
-lda.pred.fightnight7 <- predict(lda.fit, fightnight7.data) #
-lda.pred.fightnight8 <- predict(lda.fit, fightnight8.data) #
-lda.pred.fightnight9 <- predict(lda.fit, fightnight9.data) #
-lda.pred.fightnight10 <- predict(lda.fit, fightnight10.data) #
+lda.pred.fightnight1 <- predict(lda.fit.final, fightnight1.data) #garry .63 red 
+lda.pred.fightnight2 <- predict(lda.fit.final, fightnight2.data) #mingyang .81 blue 
+lda.pred.fightnight3 <- predict(lda.fit.final, fightnight3.data) #final was .51 red incorrect #Onama .56 blue 
+lda.pred.fightnight4 <- predict(lda.fit.final, fightnight4.data) #red #incorrect 
+lda.pred.fightnight5 <- predict(lda.fit.final, fightnight5.data) #brown .55 red 
+lda.pred.fightnight6 <- predict(lda.fit.final, fightnight6.data)#alikserov 
+lda.pred.fightnight7 <- predict(lda.fit.final, fightnight7.data) #
+lda.pred.fightnight8 <- predict(lda.fit.final, fightnight8.data) #
+lda.pred.fightnight9 <- predict(lda.fit.final, fightnight9.data) #
+lda.pred.fightnight10 <- predict(lda.fit.final, fightnight10.data) #
 
+#final got 8/10 
+#test got 9/10
 
 lda.class.test <- lda.pred.fightnight1$class
 lda.class.test
 
-lda.pred.fightnight3
+lda.pred.fightnight1
 
+
+#Fight night 2 
+
+fightnight5.2 <- read.csv("ufc_fight_data.csv")
+fightnight5.2$name <- fightnight5.2$ID
+fightnight5.2$ID <- c(7439:7450)
+
+lda.pred.fightnight.5.2.1 <- predict(lda.fit.final, fightnight5.2[1,])
+lda.pred.fightnight1.5.2.1
+lda.pred.fightnight.5.2.2 <- predict(lda.fit.final, fightnight5.2[2,])
+lda.pred.fightnight.5.2.2
+
+lda.pred.fightnight.5.2<- predict(lda.fit, fightnight5.2)
+lda.pred.fightnight.5.2
+
+
+fightnightpredictions <-data.frame(names = fightnight5.2$name, Probabilities = lda.pred.fightnight.5.2$posterior)
+write.csv(fightnightpredictions, "may3predictions.csv")
 
 gdata <- full_data %>%
   dplyr::select(ID, winner, gender, wins_total_diff, losses_total_diff, age_diff, weight_diff, SLpM_total_diff, SApM_total_diff, sig_str_acc_total_diff, td_def_total_diff, td_avg_diff)
