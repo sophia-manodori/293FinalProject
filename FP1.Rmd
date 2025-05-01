@@ -81,6 +81,9 @@ lda.fit <- lda(winner ~ .-ID, data = data, subset = train1)
 lda.pred <- predict(lda.fit, test1)
 lda.class <- lda.pred$class
 table(lda.class, winner.test1)
+ 979/(979+312) # 0.7583269 red 
+ 95/(95+60) #0.6129032 blue 
+ (979 + 95)/(1446) #0.7427386 overall
 
 #Final Model
 lda.fit.final <- lda(winner ~ .-ID, data = data)

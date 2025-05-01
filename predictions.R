@@ -14,7 +14,7 @@ gdata <- full_data %>%
 
 #women model
 women$ID <- 1:nrow(women)
-women <- dplyr::filter(sub_data, gender == "Women")
+women <- dplyr::filter(gdata, gender == "Women")
 women <- women  %>% dplyr::select(ID, winner, wins_total_diff, losses_total_diff, age_diff, weight_diff, SLpM_total_diff, SApM_total_diff, sig_str_acc_total_diff, td_def_total_diff, td_avg_diff)
 
 train1.wom <- (women$ID <= round(0.8*nrow(women), 0))
@@ -24,12 +24,10 @@ winner.test1.wom <- women$winner[!train1.wom]
 lda.fit.women <- lda(winner ~ . -ID, data = women , subset=train1.wom)
 lda.pred.wom <- predict(lda.fit.women, test1.wom)
 lda.class <- lda.pred.wom$class
-method.test1 <- women$method[!train1.met]
+method.test1 <- women$method[!train1.wom]
 table(lda.class, winner.test1.wom)
 
 glm.fit <- glm(winner ~ . -gender -method, family = binomial, data = women)
-
-
 
 # LDA
 lda.fit.final <- lda(winner ~ . -ID, data = data)
@@ -112,6 +110,8 @@ lda.pred.fightnight.5.2.2
 
 lda.pred.fightnight.5.2<- predict(lda.fit, fightnight5.2)
 lda.pred.fightnight.5.2
+lda.pred.fightnight.5.2.final<- predict(lda.fit.final, fightnight5.2)
+lda.pred.fightnight.5.2.final
 
 
 fightnightpredictions <-data.frame(names = fightnight5.2$name, Probabilities = lda.pred.fightnight.5.2$posterior)
