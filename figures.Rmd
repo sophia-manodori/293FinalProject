@@ -3,3 +3,23 @@ title: "figures"
 output: html_document
 ---
 
+```{r}
+library(tidyverse)
+```
+
+```{r}
+results <- tibble("Models" = c("Logistic Regression", "LDA", "QDA", "Naive Bayes", "Logistic Regression", "LDA", "QDA", "Naive Bayes", "Logistic Regression", "LDA", "QDA", "Naive Bayes"),
+                  "Success_rate" = c("Overall success rate (percent)", "Overall success rate (percent)", "Overall success rate (percent)", "Overall success rate (percent)", "Success rate for predicting Red wins (percent)", "Success rate for predicting Red wins (percent)", "Success rate for predicting Red wins (percent)", "Success rate for predicting Red wins (percent)", "Success rate for predicting Blue wins (percent)", "Success rate for predicting Blue wins (percent)", "Success rate for predicting Blue wins (percent)", "Success rate for predicting Blue wins (percent)"),
+                  "Percent" = c((100-26), (100-26), (100-28), (100-29), (100-24), (100-24), (100-26), (100-28), (100-38), (100-39), (100-40), (100-41)))
+```
+
+```{r}
+ggplot(data = results, aes(x = reorder(Models, -Percent), y = Percent, fill = reorder(Success_rate, -Percent))) +
+  geom_bar(stat="identity", position="dodge") +
+  scale_fill_manual(values=c("red","purple","blue")) +
+  ylim(0,100) +
+  xlab("Model") +
+  theme_bw() +
+  theme(legend.title=element_blank())
+```
+
