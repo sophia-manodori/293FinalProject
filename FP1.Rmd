@@ -135,26 +135,26 @@ The logistic model using only the significant predictors has an overall error ra
 
 ```{r}
 # LDA
-lda.fit <- lda(winner ~ ., data = data, subset = train)
+lda.fit <- lda(winner ~ .-ID, data = data, subset = train)
 lda.pred <- predict(lda.fit, test)
 lda.class <- lda.pred$class
 table(lda.class, winner.test)
 
-(285+111)/(228+285+111+822) # overall error rate
-285/(228+285) # Blue class error rate
-111/(111+822) # Red class error rate
+(131+300)/(228+285+111+822) # overall error rate .29
+213/(213+300) # Blue class error rate .41
+131/(131+802) # Red class error rate .14
 ```
 The overall test error rate for the LDA model is 27%. The Blue class has an error rate of 56% and the Red class has an error rate of 12%. This model performed better with the Red class than logistic regression yet worse for the Blue class and worse overall.
 
 ```{r, warning=FALSE}
 # QDA 
-qda.fit <- qda(winner ~ . , data = data, subset = train)
+qda.fit <- qda(winner ~ . -ID, data = data, subset = train)
 qda.class <- predict(qda.fit, test)$class
 table(qda.class, winner.test)
 
-(186+211)/(327+186+211+722) # overall error rate
-186/(327+186) # Blue error rate
-211/(211+722) # Red error rate
+(234 +204)/(327+186+211+722) # overall error rate .30
+204/(309+204) # Blue error rate .39
+234/(234+699) # Red error rate 0.25
 ```
 The overall error rate for the QDA model is 27%. The error rate for the Blue class is 36%, the best we've seen compared to logistic regression and LDA, and the error rate for the Red class is 22%, which is worse than logistic regression and LDA. QDA does the best job at predicting with similar accuracy for both classes.
 
