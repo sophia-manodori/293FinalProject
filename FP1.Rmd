@@ -27,11 +27,31 @@ log_data <- full_data %>%
 
 log_data$winner = as.factor(log_data$winner)
 
+log_data_red <- log_data %>%
+  filter(winner == "Red")
+
+log_data_blue <- log_data %>%
+  filter(winner == "Blue")
+
+print(paste("True proportion of Red wins in full data:",3952/6393))
+
 # select first 80% of the data to be the training set
 log_train1 <- (log_data$ID <= round(0.8*nrow(log_data), 0))
 log_test1 <- log_data[!log_train1, ]
 winner.log_test1 <- log_data$winner[!log_train1]
 nrow(log_test1)
+
+log_train_data <- log_data[log_train1, ]
+log_train_red <- log_train_data %>%
+  filter(winner == "Red")
+
+print(paste("True proportion of Red wins in training data:",2790/4856))
+
+log_test_red <- log_test1 %>%
+  filter(winner == "Red")
+
+print(paste("True proportion of Red wins in testing data:",1162/1537))
+
 ```
 
 ```{r}
@@ -50,10 +70,11 @@ table(glm.pred, winner.log_test1)
 
 200+175+326+836 # number of observations in test set used for analysis
 1-mean(glm.pred == winner.log_test1) # overall error rate
+(200+836)/(200+175+326+836) # overall sucess rate
 175/(200+175) # Blue class error rate
 326/(326+836)
 ```
-The logistic model has an overall error rate of 33%. The error rate for the Blue class is 47%, while the error rate for the Red class is significantly lower, at 28%.
+With all predictors, the logistic model has an overall error rate of 33%. The error rate for the Blue class is 47%, while the error rate for the Red class is significantly lower, at 28%.
 
 ```{r}
 data <- full_data %>%
@@ -61,57 +82,92 @@ data <- full_data %>%
   drop_na()
 
 data$winner = as.factor(data$winner)
+
+data_red <- data %>% filter(winner == 'Red')
+paste("The true proportion of Red wins in the data is:",nrow(data_red)/nrow(data))
 ```
 
 ```{r}
-# select first 80% of the data to be the training set
-train1 <- (data$ID <= round(0.8*nrow(data), 0))
-test1 <- data[!train1, ]
-winner.test1 <- data$winner[!train1]
-nrow(test1)
+# number of observations in each class that should be in the training set to preserve the full dataset's proportion of 65% red wins 35% blue wins
+red_size <- floor((nrow(data_red)/nrow(data))*0.8*(nrow(data)))
+blue_size <- floor((0.8*(nrow(data))) - red_size)
+
+# sample from each class
+red_indices <- which(data$winner == "Red")
+blue_indices <- which(data$winner == "Blue")
+train_red_indices <- sample(red_indices, red_size)
+train_blue_indices <- sample(blue_indices, blue_size)
+
+# combine indices and create a logical vector for training set
+train_indices <- sort(c(train_red_indices, train_blue_indices))
+train <- rep(FALSE, nrow(data))
+train[train_indices] <- TRUE
+test <- data[!train, ]
+winner.test <- data$winner[!train]
+
+# check to ensure proportions are still 65% red wins, 35% blue wins
+train_data <- data[train, ]
+train_red <- train_data %>%
+  filter(winner == "Red")
+
+print(paste("True proportion of Red wins in training data:",nrow(train_red)/nrow(train_data)))
+
+test_red <- test %>%
+  filter(winner == "Red")
+
+print(paste("True proportion of Red wins in testing data:",nrow(test_red)/nrow(test)))
 ```
+
+```{r}
+glm.fit <- glm(winner ~ ., family = binomial, data = data, subset = train)
+glm.probs <- predict(glm.fit, test, type = "response")
+contrasts(data$winner) # Red = 1
+glm.pred <- rep("Blue", 1446)
+glm.pred[glm.probs > .5] = "Red"
+table(glm.pred, winner.test)
+
+(285+66)/(237+276+118+815) # overall error rate
+276/(237+276) # blue error rate
+118/(118+815) # red error rate
+```
+The logistic model using only the significant predictors has an overall error rate of 24%. The error rate for the Blue class is 53%, while the error rate for the Red class is significantly lower, at 13%.
 
 ```{r}
 # LDA
-lda.fit <- lda(winner ~ ., data = data, subset = train1)
-lda.pred <- predict(lda.fit, test1)
+lda.fit <- lda(winner ~ ., data = data, subset = train)
+lda.pred <- predict(lda.fit, test)
 lda.class <- lda.pred$class
-table(lda.class, winner.test1)
+table(lda.class, winner.test)
 
-89+66+288+1003 # number of observations in test set used for analysis
+228+285+111+822
 
-(66+288)/(89+66+288+1003) # overall error rate
-66/(89+66) # Blue class error rate
-288/(288+1003) # Red class error rate
+(285+111)/(228+285+111+822) # overall error rate
+285/(228+285) # Blue class error rate
+111/(111+822) # Red class error rate
 ```
-The overall test error rate for the LDA model is 24%. The Blue class has an error rate of 43% and the Red class has an error rate of 22%. This model performed better on all levels than the logistic regression model.
+The overall test error rate for the LDA model is 27%. The Blue class has an error rate of 56% and the Red class has an error rate of 12%. This model performed better with the Red class than logistic regression yet worse for the Blue class and worse overall.
 
 ```{r, warning=FALSE}
 # QDA 
-qda.fit <- qda(winner ~ . , data = data, subset = train1)
-qda.fit
-qda.class <- predict(qda.fit, test1)$class
-table(qda.class, winner.test1)
+qda.fit <- qda(winner ~ . , data = data, subset = train)
+qda.class <- predict(qda.fit, test)$class
+table(qda.class, winner.test)
 
-78+77+331+960 # number of observations in test set used for analysis
-
-(77+331)/(78+77+331+960) # overall error rate
-77/(77+78) # Blue error rate
-331/(331+960) # Red error rate
+(186+211)/(327+186+211+722) # overall error rate
+186/(327+186) # Blue error rate
+211/(211+722) # Red error rate
 ```
-The overall error rate for the QDA model is is 28%. The error rate for the Blue class is 50% and the error rate for the Red class is 26%. Both error rates are worse than the LDA model, especially for the Blue class.
+The overall error rate for the QDA model is 27%. The error rate for the Blue class is 36%, the best we've seen compared to logistic regression and LDA, and the error rate for the Red class is 22%, which is worse than logistic regression and LDA. QDA does the best job at predicting with similar accuracy for both classes.
 
 ```{r}
 # Naive Bayes
-nb.fit <- naiveBayes(winner ~ ., data = data, subset = train1)
-nb.class <- predict(nb.fit, test1)
-table(nb.class, winner.test1)
+nb.fit <- naiveBayes(winner ~ ., data = data, subset = train)
+nb.class <- predict(nb.fit, test)
+table(nb.class, winner.test)
 
-85+70+309+982 # number of observations in test set used for analysis
-
-(70+309)/(85+70+309+982) # overall error rate
-70/(70+85) # Blue error rate
-309/(309+982) # Red error rate
+(203+227)/(310+203+227+706) # overall error rate
+203/(203+310) # Blue error rate
+227/(227+706) # Red error rate
 ```
-The overall error rate is 26%. The error rate for the Blue class is 45% and the error rate for the Red class is 24%. Both error rates are worse than the LDA model. All models do substantially better at predicting the Red winner than at predicting the Blue winner. This is likely due to the majority of the wins being Red winners, as the Red side is usually the champion's side, so the greater number of Red wins allows the model to understand and predict Red wins better. We will use the LDA model to predict the outcome for the upcoming fight this weekend Saturday April 26th. 
-
+The overall error rate is 30%. The error rate for the Blue class is 40% and the error rate for the Red class is 24%. 
+This model performs better for the Blue class than logistic and LDA, yet its overall error rate is still worse than all three previous models. QDA is the best model, as although its overall error rate is greater than logistic regression's error rate by 3 percentage points, and its error rate for the Red class is greater than logistic regression's and LDA's, an error rate for the Red class of 22% is still very good and signifies a good model, and its increased accuracy for the Blue class over the other three models means it is a pretty accurate model for both classes.
