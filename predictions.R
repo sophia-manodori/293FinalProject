@@ -27,6 +27,10 @@ lda.class <- lda.pred.wom$class
 method.test1 <- women$method[!train1.wom]
 table(lda.class, winner.test1.wom)
 
+lda.fit.women.final <- lda(winner ~ . -ID, data = women)
+
+lda.pred.wom <- predict(lda.fit.women.final, fightnight5.2)
+
 glm.fit <- glm(winner ~ . -gender -method, family = binomial, data = women)
 
 # LDA
