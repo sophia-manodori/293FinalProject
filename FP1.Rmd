@@ -8,6 +8,8 @@ output: html_document
 library(tidyverse)
 library(MASS)
 library(e1071)
+library(biotools)
+library(car)
 ```
 
 ```{r}
@@ -90,6 +92,13 @@ table(glm.pred, winner.test)
 The logistic model using only the significant predictors has an overall error rate of 26%. The error rate for the Blue class is 38%, while the error rate for the Red class is significantly lower, at 24%.
 
 ```{r}
+boxM_result <- boxM(data[ , -which(names(data) == "winner")], data$winner)
+boxM_result$p.value
+```
+
+Because Box's M test gave us a p value well below 0.05, there is extremely strong statistical evidence that the covariance matrices are not equal between the Red class and the Blue class. This violates an assumption of LDA, so we can expect logistic regression to perform somewhat better than LDA. 
+
+```{r}
 # LDA
 lda.fit <- lda(winner ~ .-ID, data = data, subset = train)
 lda.pred <- predict(lda.fit, test)
@@ -115,6 +124,11 @@ table(qda.class, winner.test)
 The overall error rate for the QDA model is 28%. The error rate for the Blue class is 40% and the error rate for the Red class is 26%.
 
 ```{r}
+cor(data[, sapply(data, is.numeric)])
+```
+The correlation matrix shows no high correlations between pairs of predictors except between the variables for wins and losses. This correlation may affect the performance of Naive Bayes.
+
+```{r}
 # Naive Bayes
 nb.fit <- naiveBayes(winner ~ .-ID, data = data, subset = train)
 nb.class <- predict(nb.fit, test)
@@ -126,4 +140,4 @@ table(nb.class, winner.test)
 ```
 The overall error rate for Naive Bayes is 29%. The error rate for the Red class is 28% and the error rate for the Blue class is 41%. 
 
-By comparing error rates, we conclude that LDA performs best per class and overall. All models do substantially better at predicting the Red winner than at predicting the Blue winner. This is likely due to the majority of the wins being Red winners, as the Red side is usually the champion's side, so the greater number of Red wins allows the model to understand and predict Red wins better. We will use the LDA model to predict the outcome for the fights on Saturday April 26th. 
+By comparing error rates, we conclude that although logistic regression and LDA have the same overall error rate and error rate for the Red class, logistic regression performs better by 1 percentage point for the Blue class. All models do substantially better at predicting the Red winner than at predicting the Blue winner. This is likely due to the majority of the wins being Red winners, as the Red side is usually the champion's side, so the greater number of Red wins allows the model to understand and predict Red wins better. We will use the LDA model to predict the outcome for the fights on Saturday April 26th. 
